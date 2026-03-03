@@ -1,0 +1,1678 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta name="google-site-verification" content="ftFOlJETX-2KNjaPh8W6s8lhigItRuu9fOmjHZZ0nY0" />
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+    integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+  <title>Improving Flow Matching based Text-to-Speech with Dual-Model Preference Optimization and Classifier-Free Guidance</title>
+</head>
+<style type="text/css">
+  table {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  audio {
+    width: 100%;
+  }
+
+  thead>tr>th:first-child {
+    width: 96px;
+  }
+
+  @media (max-width: 767px) {
+    .big-screen {
+      display: none;
+    }
+  }
+
+  @media (min-width: 767px) {
+    .small-screen {
+      display: none;
+    }
+  }
+</style>
+
+<body>
+  <header class="header">
+    <div class="jumbotron bg-secondary text-center">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-md-12">
+            <h1><a class="text-light">
+				Improving Flow Matching based Text-to-Speech with Dual-Model Preference Optimization and Classifier-Free Guidance <br> </a></h1>
+            <p>
+              <div class="row">
+                <div class="col-md col-sm-12"><a class="text-light">Minchuan Chen, Chenchen Wan, Junjie Li, Peng Qi, Shaojun Wang, Jing Xiao</a> </div>
+              </div>
+            </p>
+			<p><a class="text-light">Ping An Technology, China
+				<br>
+				                     Shanghai Jiao Tong University, China
+				</p></a>
+				
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <div class="row" id="intro">
+        <div class="col">
+          <h2>Abstract</h2>
+          <div>
+            <p>
+Flow matching is a powerful generative model and has become a core component of modern text-to-speech (TTS) systems. 
+In order to ensure high-quality speech synthesis, Classifier-Free Guidance (CFG) is widely used during the training and inference stages of flow matching based TTS models. 
+However, in the scenario of zero-shot voice cloning, the models keep human feedback isolated from training and inference, which results in mismatched training objectives and evaluation metrics. 
+In this work, we propose a preference optimization method by separately modeling preferred and dispreferred information with two distinct models, which enables better utilization of preferred and dispreferred data. 
+We further incorporate an improved CFG technique to enhance synthesis adherence to the text and reference audio. The experiments demonstrate that these optimizations significantly enhance intelligibility, speaker similarity and naturalness of synthesized speech, outperforming the baseline TTS model.
+
+ 	
+            </p>
+          </div>
+        </div>
+      </div>
+	  
+      
+      <hr>
+      <div class="row" id="result">
+        <div class="col-md-12">
+          <h2>Audio Samples</h2>
+          <p>For the pretraining phase, we use WenetSpeech4TTS Premium, a Mandarin dataset contains 945 hours of multi-speaker corpus, 
+			  and LibriTTS dataset, a multi-speaker English corpus comprising approximately 585 hours of speech, as the training sets. 
+			  For DPO, we construct different preference speech datasets (Data1, Data2 and Data3) for training. <br>
+
+          <br>
+		  <strong>Baseline</strong>: Pretrained F5-TTS Small model.<br>
+          <strong>PA-Base-DT1</strong> : Single model DPO training with Data1 (preference pairs constructed by ground truth samples and generated samples of the pretrained model).<br>
+		  <strong>PA-Base-DT2</strong> : Single model DPO training with Data2 (preference pairs constructed by ranking regular text-audio pairs with WER and SSIM metrics).<br>
+		  <strong>PA-Dual-DT1</strong> : Proposed dual model DPO training with Data1 (preference pairs constructed by ground truth samples and speech samples generated with the pretrained model).<br>
+		  <strong>PA-Dual-DT2</strong> : Proposed dual model DPO training with Data2 (preference pairs constructed by regular text-audio pairs with WER and SSIM metrics).<br>
+		  <strong>PA-Dual-DT3</strong> : Proposed dual model DPO training with Data3 (preference pairs constructed by challenging text-audio pairs with WER and SSIM metrics).<br>
+		  </p>
+		  
+	  <hr> 	  
+		  		  		  
+		  <h3>Mandarin (Seed-TTS test-zh)</h3>
+                  <div class="big-screen">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th style="width: 200px;">Text </th>
+                          <th>Prompt</th>
+                          <th>Baseline</th>
+                          <th>PA-Base-DT1</th>
+						  <th>PA-Base-DT2</th>
+						  <th>PA-Dual-DT1</th>
+						  <th>PA-Dual-DT2</th>
+                          <th>PA-Dual-DT3</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+						
+						<tr>
+
+						  <td>将货物通关时间，从原来的九点二个小时，缩短为九分钟。</td>
+						  
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-baseline.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-base-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-baseDT-2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-dual-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-dual-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-dual-DT3.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                        </tr>
+						
+						
+						
+						
+						<tr>
+                           <td>尽管时代变迁，但这间老店却像激流里，唯一不动的岩石。</td>
+						   
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-baseline.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-base-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-base-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-dual-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-dual-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-dual-DT3.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                        </tr>
+						
+						
+						
+						<tr>
+                           <td>产品经理其实是随着互联互联网发展应用，而生的。</td>
+						  
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000096-prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-baseline.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-base-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-base-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-dual-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-dual-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-dual-DT3.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                        </tr>
+						
+                      </tbody>
+                    </table>
+                  </div>
+
+
+
+				  
+                  <div class="small-screen">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>将货物通关时间，从原来的九点二个小时，缩短为九分钟。</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Baseline</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-baseline.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Base-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-base-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>PA-Base-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-baseDT-2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-dual-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-dual-DT2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT3</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-00000028-dual-DT3.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  
+                    
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>尽管时代变迁，但这间老店却像激流里，唯一不动的岩石。</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00004512-prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Baseline</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-baseline.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Base-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-base-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>PA-Base-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-base-DT2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-dual-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>。
+                        <tr>
+                          <td>PA-Dual-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-dual-DT2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT3</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/00005274-00000055-dual-DT3.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    
+                    
+					
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>产品经理其实是随着互联互联网发展应用，而生的。</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000096-prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Baseline</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-baseline.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Base-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-base-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>PA-Base-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-base-DT2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-dual-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-dual-DT2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT3</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/mandarin/10004423-00000048-dual-DT3.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    
+                  </div>
+		  <hr>
+		  
+		
+		<h3>English (Seed-TTS test-en)</h3>
+                  <div class="big-screen">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th style="width: 200px;">Text</th>
+                          <th>Prompt</th>
+                          <th>Baseline</th>
+                          <th>PA-Base-DT1</th>
+						  <th>PA-Base-DT2</th>
+						  <th>PA-Dual-DT1</th>
+						  <th>PA-Dual-DT2</th>
+                          <th>PA-Dual-DT3</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+						
+						<tr>
+                          <th scope="row"> <p style="font-weight: normal;"> Outdoor area crowded with jeeps packed with people, seen from behind.</p> </th>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530_prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_baseline.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_base-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_base-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_dual-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_dual-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_dual-DT3.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                        </tr>
+						
+						
+						
+						
+						<tr>
+                          <th scope="row"> <p style="font-weight: normal;"> There is no universal definition of intelligence, but everyone agrees that the ability of learning belongs to it.</p> </th>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172_prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_baseline.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_base-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_base-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_dual-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_dual-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_dual-DT3.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                        </tr>
+						
+						
+						
+						<tr>
+                          <th scope="row"><p style="font-weight: normal;"> This was the strangest of all things that ever came to earth from outer space.</p></th>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569_prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569-common_voice_en_68570_baseline.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569-common_voice_en_68570_base-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569-common_voice_en_68570_base-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569-common_voice_en_68570_dual-DT1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569-common_voice_en_68570_dual-DT2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569-common_voice_en_68570_dual-DT3.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                        </tr>
+									
+                      </tbody>
+                    </table>
+                  </div>
+			
+
+
+			
+                  <div class="small-screen">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th> <p style="font-weight: normal;"> Outdoor area crowded with jeeps packed with people, seen from behind. </p> </th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530_prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Baseline</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_baseline.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Base-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_base-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>PA-Base-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_base-DT2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_dual-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_dual-DT2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT3</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_591530-common_voice_en_591529_dual-DT3.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  
+                    
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th> <p style="font-weight: normal;"> There is no universal definition of intelligence, but everyone agrees that the ability of learning belongs to it. </p> </th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172_prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Baseline</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_baseline.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Base-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_base-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>PA-Base-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_base-DT2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_dual-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_dual-DT2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT3</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_86172-common_voice_en_86171_dual-DT3.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    
+                    
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th><p style="font-weight: normal;"> This was the strangest of all things that ever came to earth from outer space.</p></th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569_prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Baseline</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569-common_voice_en_68570_baseline.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Base-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569-common_voice_en_68570_base-DT1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>PA-Base-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569-common_voice_en_68570_base-DT2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT1</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/common_voice_en_68569-common_voice_en_68570_base-DT3.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT2</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/3-p251.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>PA-Dual-DT3</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/english/3-p251.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    
+                  </div>
+		  <hr>
+
+
+
+			
+		<h3>Effect of preference data size</h3>
+                  <div class="big-screen">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th style="width: 200px;">Text</th>
+						  <th>Prompt</th>
+                          <th>0 pair</th>
+                          <th>250 pairs</th>
+                          <th>500 pairs</th>
+						  <th>750 pairs</th>
+						  <th>1000 pairs</th>
+						  <th>1500 pairs</th>
+                          <th>2000 pairs</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+						
+						<tr>
+                          <th scope="row"> <p style="font-weight: normal;"> 厨房师傅使用扫把清扫地面后，将其放入用于做菜的锅内进行漂洗。 </p> </th>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000060-prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair0.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair250.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair500.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair750.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair1000.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair1500.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair2000.wav" type="audio/wav" />
+                            </audio>
+                          </td>						  
+                        </tr>
+						
+						
+						
+						
+						<tr>
+                          <th scope="row"> <p style="font-weight: normal;"> 而对于话多的大嗓门先生来说，那难受的劲就更别提了。 </p> </th>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000052-prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair0.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair250.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair500.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair750.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair1000.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair1500.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair2000.wav" type="audio/wav" />
+                            </audio>
+                          </td>						  
+                        </tr>
+						
+						
+						
+						<tr>
+                          <th scope="row"> <p style="font-weight: normal;"> 都需要将车辆的登记身份，从非营非运营换成运营。 </p> </th>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000085-prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair0.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair250.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair500.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair750.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair1000.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair1500.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair2000.wav" type="audio/wav" />
+                            </audio>
+                          </td>						  
+                        </tr>
+						
+                      </tbody>
+                    </table>
+                  </div>
+
+
+				  
+                  <div class="small-screen">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th> <p style="font-weight: normal;"> 厨房师傅使用扫把清扫地面后，将其放入用于做菜的锅内进行漂洗。 </p> </th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000060-prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>0 pair</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair0.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>250 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair250.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>500 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair500.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>750 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair750.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>1000 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair1000.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>1500 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair1500.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+
+                        <tr>
+                          <td>2000 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004554-00000082-pair2000.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>						
+						
+                      </tbody>
+                    </table>
+                  
+                    
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th> <p style="font-weight: normal;"> 而对于话多的大嗓门先生来说，那难受的劲就更别提了。 </p> </th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>0 pair</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000052-prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>250 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair0.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>250 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair250.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>500 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair500.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>750 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair750.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>1000 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair1000.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>1500 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair1500.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						
+                        <tr>
+                          <td>2000 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004518-00000106-pair2000.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>						
+						
+                      </tbody>
+                    </table>
+                    
+                    
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th> <p style="font-weight: normal;"> 都需要将车辆的登记身份，从非营非运营换成运营。 </p> </th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000085-prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>0 pair</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair0.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>250 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair250.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>500 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair500.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>750 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair750.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>1000 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair1000.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>1500 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair1500.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						
+                        <tr>
+                          <td>2000 pairs</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/data_scale/00004558-00000044-pair2000.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						
+                      </tbody>
+                    </table>
+                    
+                  </div>
+		  <hr>
+
+
+
+
+			
+		<h3>Effect of CFG scale</h3>
+                  <div class="big-screen">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th style="width: 200px;">Text</th>
+						  <th>Prompt</th>
+                          <th>&#969=1.0</th>
+                          <th>&#969=1.5</th>
+						  <th>&#969=2.0</th>
+						  <th>&#969=2.5</th>
+                          <th>&#969=3.0</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+						
+						<tr>
+                          <th scope="row"> <p style="font-weight: normal;"> 但艾肯尔还是感到害怕，还萌生了打道回府的念头。 </p> </th>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000046-prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000109-cfg1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000109-cfg1.5.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000109-cfg2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000109-cfg2.5.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000109-cfg3.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+
+                        </tr>
+						
+						
+						
+						
+						<tr>
+                          <th scope="row"> <p style="font-weight: normal;"> 令人可怕的描述，差不多用了十页稿纸。 </p> </th>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000071-prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000017-cfg1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000017-cfg1.5.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000017-cfg2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000017-cfg2.5.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000017-cfg3.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  
+                        </tr>
+						
+						
+						
+						<tr>
+                          <th scope="row"> <p style="font-weight: normal;"> 每天早晨有一个老仆人，来为他打扫房间和跑腿。 </p> </th>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000087-prompt.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000030-cfg1.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000030-cfg1.5.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000030-cfg2.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000030-cfg2.5.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000030-cfg3.wav" type="audio/wav" />
+                            </audio>
+                          </td>
+						  
+                        </tr>
+						
+						
+						
+                      </tbody>
+                    </table>
+                  </div>
+				  
+                  <div class="small-screen">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th> <p style="font-weight: normal;"> 但艾肯尔还是感到害怕，还萌生了打道回府的念头。 </p> </th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000046-prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=1.0</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000109-cfg1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=1.5</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000109-cfg1.5.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>&#969=2.0</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000109-cfg2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=2.5</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000109-cfg2.5.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=3.0</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004566-00000109-cfg3.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						
+                      </tbody>
+                    </table>
+                  
+                    
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th><p style="font-weight: normal;"> 令人可怕的描述，差不多用了十页稿纸。 </p></th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000071-prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=1.0</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000017-cfg1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=1.5</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000017-cfg1.5.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>&#969=2.0</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000017-cfg2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=2.5</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000017-cfg2.5.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>	
+                        <tr>
+                          <td>&#969=3.0</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004553-00000017-cfg3.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						
+                      </tbody>
+                    </table>
+                    
+                    
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th> <p style="font-weight: normal;"> 每天早晨有一个老仆人，来为他打扫房间和跑腿。 </p> </th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Prompt</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000087-prompt.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=1.0</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000030-cfg1.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=1.5</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000030-cfg1.5.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						<tr>
+                          <td>&#969=2.0</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000030-cfg2.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=2.5</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000030-cfg2.5.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>&#969=3.0</td>
+                          <td>
+                            <audio controls>
+                              <source src="./audio/cfg/00004540-00000030-cfg3.wav" type="audio/wav" />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </td>
+                        </tr>
+						
+                      </tbody>
+                    </table>
+                    
+                  </div>
+		  <hr>
+		  
+		  
+      <div class="row" id="ref">
+        <div class="col">
+          <h2>References</h2>
+          <div>
+            <p>
+              <a name="1">[1]</a>
+              Yushen Chen, Zhikang Niu, Ziyang Ma, Keqi Deng, Chunhui Wang, Jian Zhao, Kai Yu, Xie Chen, “F5-TTS: A fairytaler that fakes fluent and faithful speech with flow matching</a>,” in <em>ACL, 2025.</em>
+            </p>
+            <p>
+              <a name="2">[2]</a>
+              Minghao Fu, Guo-Hua Wang, Liangfu Cao, Qing-Guo Chen,Zhao Xu, Weihua Luo, and Kaifu Zhang, “CHATS: Combining human-aligned optimization and test-time sampling for text-to-image generation</a>,” in <em>ICML, 2025.</em>
+            </p>
+            <p>
+              <a name="3">[3]</a>
+              Fu-Yun Wang, Yunhao Shui, Piao, et al., “Diffusion-NPO: Negative preference optimization for better preference aligned generation of diffusion models</a>,” in <em>ICLR, 2025.</em>
+            </p>
+          </div>
+        </div>
+      </div>
+      <hr>
+      <!-- <div class="row" id="contact">
+          <div class="col">
+            <h2>Contact</h2>
+            <div></div>
+          </div>
+        </div> -->
+    </div>
+  </main>
+  <footer class="bg-secondary text-light mt-4 pt-3 pb-2 ">
+    <div class="container">
+      <p class="text-center">
+        <small>
+          
+          <br>
+          <a class="text-light"><strong> Ping An Technology, 2026 </strong></a> 
+        </small>
+      </p>
+    </div>
+  </footer>
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+    integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+    integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
